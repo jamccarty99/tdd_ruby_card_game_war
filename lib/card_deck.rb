@@ -1,14 +1,19 @@
 require_relative 'playing_card'
 
 class CardDeck
+  RANK = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king","ace"]
+  SUIT = ["clubs", "diamonds", "hearts", "spades"]
 
   def initialize
-    cardDeck = (1..52).to_a
-    @cardDeck = cardDeck
+    @cardDeck = newDeck
   end
 
   def newDeck
-    @cardDeck
+    newDeck = RANK.map{ |rank| SUIT.map{ |suit| PlayingCard.new(rank, suit) } }.flatten
+  end
+
+  def shuffle!
+    @deck.shuffle!
   end
 
   def cardsLeft
@@ -16,7 +21,6 @@ class CardDeck
   end
 
   def deal
-    @cardDeck.pop
-    cardsLeft
+    @cardDeck.shift
   end
 end
