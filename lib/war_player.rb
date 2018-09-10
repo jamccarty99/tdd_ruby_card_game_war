@@ -7,9 +7,8 @@ class WarPlayer
     @name = name
     @hand = []
   end
-  
-  # def hand
-  #   @hand
-  # end
 
+  def handLength
+    @hand.length
+  end
 end
