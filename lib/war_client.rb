@@ -1,24 +1,11 @@
 class WarClient
-  attr_reader   :client
+  attr_accessor   :connection, :ready
   attr_reader   :name
 
-  def initialize(client, player_name)
-    @client = client
+  def initialize(connection, player_name)
+    @connection = connection
     @name = player_name
-  end
-
-  # def provide_input(text)
-  #   @socket.puts(text)
-  # end
-  #
-  # def capture_output(delay=0.1)
-  #   sleep(delay)
-  #   @output = @socket.read_nonblock(1000) # not gets which blocks
-  # rescue IO::WaitReadable
-  #   @output = ""
-  # end
-
-  def ready?
+    @ready = false
   end
 
 end

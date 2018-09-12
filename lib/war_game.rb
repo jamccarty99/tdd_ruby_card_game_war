@@ -36,34 +36,54 @@ class WarGame
     end
   end
 
-  def play_round(hand1 = player1.hand, hand2 = player2.hand)
+  def play_round
     return if winner
-    player1_card = hand1.first
-    player2_card = hand2.first
-    # binding.pry
+    player1_card = player1.hand.first
+    player2_card = player2.hand.first
     compareCards(player1_card, player2_card)
+    roundWinner?
+  end
+
+  def roundWinner?
     if @roundWinner == player1
-      war?(player1, hand1, hand2)
+      resultOfWar?(player1)
     elsif @roundWinner == player2
-      war?(player2, hand1, hand2)
+      resultOfWar?(player2)
     else
-      4.times do
-        addSpoils(hand1, hand2)
-      end
-      play_round
+      warRound
     end
   end
 
-  def war?(roundWinner, hand1 = player1.hand, hand2 = player2.hand)
-    if cardsLeft(@warSpoils) > 0
-      addSpoils(hand1, hand2)
-      giveSpoils(roundWinner.hand)
-      winRound(roundWinner, "war")
-    elsif cardsLeft(@warSpoils) == 0
-      roundWinner.hand << hand1.shift
-      roundWinner.hand << hand2.shift
-      winRound(roundWinner, "round")
+  def warRound
+    4.times do
+      addSpoils
     end
+    play_round
+  end
+
+  def resultOfWar?(roundWinner)
+    if cardsLeft(@warSpoils) > 0
+      warResult(roundWinner)
+    elsif cardsLeft(@warSpoils) == 0
+      roundResult(roundWinner)
+    end
+  end
+
+  def warResult(roundWinner)
+    addSpoils
+    giveSpoils(roundWinner.hand)
+    declareRoundWinner(roundWinner, "war")
+  end
+
+  def roundResult(roundWinner)
+    roundWinner.hand << player1.hand.shift
+    roundWinner.hand << player2.hand.shift
+    declareRoundWinner(roundWinner, "round")
+  end
+
+  def declareRoundWinner(roundWinner, round)
+    "#{roundWinner.name} won the #{round}"
+    # by taking #{loser_card} of #{suit} with #{winner_card} of #{suit}
   end
 
   def compareCards(player1_card, player2_card)
@@ -80,10 +100,7 @@ class WarGame
     VALUES[card.rank]
   end
 
-  def winRound(roundWinner, round)
-    "#{roundWinner.name} won the #{round}"
-    # by taking #{loser_card} of #{suit} with #{winner_card} of #{suit}
-  end
+
 
   def giveSpoils(player, spoils = @warSpoils)
     while cardsLeft(spoils) > 0
@@ -92,9 +109,9 @@ class WarGame
     player
   end
 
-  def addSpoils(hand1 = player1.hand, hand2 = player2.hand)
-    @warSpoils << hand1.shift
-    @warSpoils << hand2.shift
+  def addSpoils
+    @warSpoils << player1.hand.shift
+    @warSpoils << player2.hand.shift
     @warSpoils.compact!
   end
 

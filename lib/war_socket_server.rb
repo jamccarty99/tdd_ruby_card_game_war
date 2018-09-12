@@ -1,10 +1,11 @@
 require 'socket'
 require_relative 'war_socket_game_runner'
+require_relative 'war_client'
+require_relative 'war_game'
 require 'pry'
 
 class WarSocketServer
   def initialize
-    @allClients = []
   end
 
   def port_number
@@ -15,18 +16,12 @@ class WarSocketServer
     @pending_clients ||= []
   end
 
-  def game_in_progress
-    @game_in_progress ||= {}
+  def players_in_game
+    @players_in_game ||= {}
   end
 
   def games
     @games ||= []
-  end
-
-  def handInfo(game)
-    players = game_in_progress[game]
-    # players[0].puts("Ready to begin a game of WAR?")
-    # players[1].puts("Ready to begin a game of WAR?")
   end
 
   def start
@@ -34,43 +29,46 @@ class WarSocketServer
   end
 
   def accept_new_client(player_name = "Random Player")
-    client = @server.accept_nonblock
+    client = WarClient.new(@server.accept_nonblock, player_name)
     # associate player and client
-    WarClient.new(client, player_name)
-    @allClients.push(client)
     pending_clients.push(client)
-    client.puts(pending_clients.length.odd? ? "Welcome.  Waiting for another player to join." : "Welcome.  You are about to go to war.")
+    client.connection.puts(pending_clients.length.odd? ? "Welcome.  Waiting for another player to join." : "Welcome.  You are about to go to war.")
+    client
   rescue IO::WaitReadable, Errno::EINTR
-    puts "No client to accept"
+    puts ""
   end
 
   def create_game_if_possible
     if pending_clients.length > 1
       game = WarGame.new
       games.push(game)
-      game_in_progress[game] = pending_clients.shift(2)
-      @allClients[0].puts("Ready to begin a game of WAR?")
-      @allClients[1].puts("Ready to begin a game of WAR?")
+      players_in_game[game] = pending_clients.shift(2)
       game.start
       handInfo(game)
+      game
     end
   end
 
-  def capture_output(delay=0.1)
-    sleep(delay)
-    @output = @allClients[0].read_nonblock(1000) # not gets which blocks
-    @output = @allClients[1].read_nonblock(1000)
-  rescue IO::WaitReadable
-    @output = ""
+  def gameMessages(game, text)
+    players_in_game[game][0].connection.puts(text)
+    players_in_game[game][1].connection.puts(text)
+  end
+
+  def handInfo(game)
+    player1Cards = "#{game.player1.name} has #{game.player1.handLength} cards left. "
+    player2Cards = "#{game.player2.name} has #{game.player2.handLength} cards left."
+    cardsLeft = player1Cards + player2Cards
+    gameMessages(game, cardsLeft)
   end
 
   def run_game(game)
     # spawn a thread
     threads = []
-    game_runner = WarSocketGameRunner.new(game, game_in_progress)
-    game_runner.start
-    # thread1 = Thread.new {  }
-    # threads << thread1
+    Thread.start() do
+      game_runner = WarSocketGameRunner.new(game, @players_in_game[game])
+      game_runner.start
+    end
+    # threads << thread1 =
     # threads.each { |thr| thr.join }
   end
 

@@ -5,8 +5,8 @@ describe 'WarGame' do
   let(:player2_card) { PlayingCard.new("4", "Hearts") }
   let(:tieCard) { PlayingCard.new("Queen", "Hearts") }
   let(:game) { WarGame.new("player1", "player2") }
-  let(:deckOf2) { game = [ PlayingCard.new("Queen", "Spades"), PlayingCard.new("4", "Spades") ] }
-  let(:deckOf1) { game = [ PlayingCard.new("4", "Hearts") ] }
+  let(:deckOf2) { [ PlayingCard.new("Queen", "Spades"), PlayingCard.new("4", "Spades") ] }
+  let(:deckOf1) { [ PlayingCard.new("4", "Hearts") ] }
 
   before :each do
     game.start()
@@ -31,13 +31,16 @@ describe 'WarGame' do
     end
 
     it 'Should play a round of war and determine who won that round' do
-
-      expect(game.play_round(deckOf2, deckOf1)).to eq "player1 won the round"
+      game.player1.hand = [ PlayingCard.new('Queen', 'Spades') ]
+      game.player2.hand = [ PlayingCard.new('Jack', 'Spades') ]
+      expect(game.play_round).to eq "player1 won the round"
     end
 
     it 'Should move both played round cards to the winners hand' do
-      game.play_round(deckOf2, deckOf1)
-      expect(game.cardsLeft(deckOf2)).to eq 3
+      game.player1.hand = deckOf2
+      game.player2.hand = deckOf1
+      game.play_round
+      expect(game.player1.handLength).to eq 3
     end
 
     it 'Should play another round if there is a tie and give the spoils' do
@@ -53,9 +56,9 @@ describe 'WarGame' do
 
   end
 
-  describe 'winRound' do
+  describe 'declareRoundWinner' do
     it 'Should display a message with correct info when a player wins a round' do
-      expect(game.winRound(game.player1, "round")).to eq "player1 won the round"
+      expect(game.declareRoundWinner(game.player1, "round")).to eq "player1 won the round"
     end
   end
 
@@ -68,7 +71,9 @@ describe 'WarGame' do
 
   describe 'addSpoils' do
     it 'Should add the top card of each hand to the warSpoils array' do
-      game.addSpoils(deckOf2, deckOf1)
+      game.player1.hand = deckOf2
+      game.player2.hand = deckOf1
+      game.addSpoils
       expect(deckOf2.length).to eq 1
       expect(deckOf1.length).to eq 0
     end
